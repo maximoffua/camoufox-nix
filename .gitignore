@@ -1,0 +1,7 @@
+.omx/
+artifacts/
+logs/
+tmp/
+result
+result-*
+tmp
