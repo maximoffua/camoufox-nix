@@ -25,6 +25,7 @@ let
   camofox-browser = pkgs.callPackage ./camofox-browser/package.nix {
     inherit camoufox;
   };
+  jo-camofox-browser = pkgs.callPackage ./jo-camofox-browser/package.nix { };
   camofox-mcp = pkgs.callPackage ./camofox-mcp/package.nix { };
 
   python-camoufox = pkgs.python3Packages.callPackage ./python-camoufox/default.nix {
@@ -83,6 +84,7 @@ in
     python-camoufox
     camofox-cli
     camofox-browser
+    jo-camofox-browser
     camofox-mcp
     camoufox-js
     camoufox-mcp-server

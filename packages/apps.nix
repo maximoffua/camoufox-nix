@@ -12,6 +12,7 @@ in
   camoufox-python = app packages.python-camoufox;
   camofox-cli = app packages.camofox-cli;
   camofox-browser = app packages.camofox-browser;
+  jo-camofox-browser = app packages.jo-camofox-browser;
   camofox-mcp = app packages.camofox-mcp;
   camoufox-js = app packages.camoufox-js;
   camoufox-mcp-server = app packages.camoufox-mcp-server;
