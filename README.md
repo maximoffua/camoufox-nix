@@ -163,10 +163,11 @@ curl http://localhost:9377/openapi.json
 The wrapper adds `Xvfb` to `PATH`, because upstream starts a virtual display on Linux. It does **not** bake the heavy Nix `camoufox` build into the runtime closure; set browser path explicitly when you want to launch real sessions:
 
 ```bash
-export CAMOFOX_EXECUTABLE_PATH=$(nix build .#camoufox --no-link --print-out-paths)/bin/camoufox
-export CAMOUFOX_EXECUTABLE_PATH=$CAMOFOX_EXECUTABLE_PATH
+export CAMOUFOX_EXECUTABLE_PATH=$(nix build .#camoufox --no-link --print-out-paths)/bin/camoufox
 CAMOFOX_PORT=9377 nix run .#jo-camofox-browser
 ```
+
+The wrapper also accepts upstream's shorter `CAMOFOX_EXECUTABLE_PATH` spelling, so either env var works.
 
 Useful env vars: `CAMOFOX_PORT` / `PORT` for the server port, `CAMOFOX_ACCESS_KEY` for bearer auth, `CAMOFOX_API_KEY` for cookie import, and `CAMOFOX_ADMIN_KEY` for `/stop`.
 

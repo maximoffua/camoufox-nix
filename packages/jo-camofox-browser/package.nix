@@ -37,8 +37,7 @@ buildNpmPackage rec {
 
   postPatch = ''
     substituteInPlace server.js \
-      --replace-fail '      const options = await launchOptions({' '      const camoufoxExecutablePath = process.env.CAMOFOX_EXECUTABLE_PATH || process.env.CAMOUFOX_EXECUTABLE_PATH;
-      const options = await launchOptions({ ...(camoufoxExecutablePath ? { executable_path: camoufoxExecutablePath } : {}),'
+      --replace-fail '      const options = await launchOptions({' '      const options = await launchOptions({ ...(process.env.CAMOFOX_EXECUTABLE_PATH ? { executable_path: process.env.CAMOFOX_EXECUTABLE_PATH } : {}),'
   '';
 
   installPhase = ''
@@ -48,6 +47,9 @@ buildNpmPackage rec {
 
     npm prune --omit=dev
     npm rebuild better-sqlite3 --build-from-source --offline
+    find node_modules/better-sqlite3/build/Release -mindepth 1 \
+      ! -name better_sqlite3.node \
+      -exec rm -rf {} +
 
     cp -r \
       AGENTS.md \
@@ -67,6 +69,7 @@ buildNpmPackage rec {
     makeWrapper ${lib.getExe nodejs} $out/bin/jo-camofox-browser \
       --add-flags "$out/lib/${pname}/server.js" \
       --chdir "$out/lib/${pname}" \
+      --run 'export CAMOFOX_EXECUTABLE_PATH="''${CAMOFOX_EXECUTABLE_PATH:-''${CAMOUFOX_EXECUTABLE_PATH:-}}"' \
       --prefix PATH : ${lib.makeBinPath [ xorg-server ]}
 
     makeWrapper $out/bin/jo-camofox-browser $out/lib/${pname}/run.sh
