@@ -48,6 +48,9 @@
               '';
               config = {
                 Env = [
+                  "CAMOUFOX_EXECUTABLE=${pkgs.lib.getExe packages.camoufox}"
+                  "CAMOUFOX_EXECUTABLE_PATH=${pkgs.lib.getExe packages.camoufox}"
+                  "CAMOFOX_EXECUTABLE=${pkgs.lib.getExe packages.camoufox}"
                   "CAMOFOX_EXECUTABLE_PATH=${pkgs.lib.getExe packages.camoufox}"
                   "HOME=/tmp"
                   "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -76,7 +79,10 @@
               '';
               config = {
                 Env = [
+                  "CAMOUFOX_EXECUTABLE=${pkgs.lib.getExe packages.camoufox-vulpineos}"
                   "CAMOUFOX_EXECUTABLE_PATH=${pkgs.lib.getExe packages.camoufox-vulpineos}"
+                  "CAMOFOX_EXECUTABLE=${pkgs.lib.getExe packages.camoufox-vulpineos}"
+                  "CAMOFOX_EXECUTABLE_PATH=${pkgs.lib.getExe packages.camoufox-vulpineos}"
                   "HOME=/tmp"
                   "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
                 ];

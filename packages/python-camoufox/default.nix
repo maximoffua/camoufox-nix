@@ -22,6 +22,9 @@
   camoufox-browser ? null,
 }:
 
+let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
+in
 buildPythonPackage rec {
   pname = "camoufox";
   version = "0.4.11";
@@ -31,6 +34,8 @@ buildPythonPackage rec {
     inherit pname version;
     hash = "sha256-CiydJKxQcMEE58KxJcCjk39w76QWCE74iv6Uwypy7r4=";
   };
+
+  patches = [ ./nix-executable-env.patch ];
 
   build-system = [ poetry-core ];
 
@@ -58,7 +63,7 @@ buildPythonPackage rec {
 
   postFixup = lib.optionalString (camoufox-browser != null) ''
     wrapProgram "$out/bin/camoufox" \
-      --set CAMOUFOX_EXECUTABLE_PATH "${lib.getExe camoufox-browser}"
+      ${camoufoxEnv.wrapperBrowserArgs camoufox-browser}
   '';
 
   meta = {

@@ -10,6 +10,7 @@
 }:
 
 let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-cli";
   npmName = "camoufox-cli";
   version = "0.2.0";
@@ -47,15 +48,17 @@ buildNpmPackage {
     substituteInPlace dist/cli.js \
       --replace-fail 'spawn("node", [daemonPath, ...args], {' 'spawn(process.execPath, [daemonPath, ...args], {'
     substituteInPlace dist/browser.js \
-      --replace-fail '        execFileSync("npx", ["camoufox-js", "path"], { stdio: "pipe" });' '        if (process.env.CAMOFOX_EXECUTABLE_PATH)
+      --replace-fail '        execFileSync("npx", ["camoufox-js", "path"], { stdio: "pipe" });' '        const executablePath = ${camoufoxEnv.executableEnvJs};
+        if (executablePath)
             return;
         execFileSync("npx", ["camoufox-js", "path"], { stdio: "pipe" });'
     substituteInPlace dist/browser.js \
       --replace-fail '        const launchOpts = { headless };' '        const launchOpts = { headless };
-        if (process.env.CAMOFOX_EXECUTABLE_PATH)
-            launchOpts.executable_path = process.env.CAMOFOX_EXECUTABLE_PATH;'
+        const executablePath = ${camoufoxEnv.executableEnvJs};
+        if (executablePath)
+            launchOpts.executable_path = executablePath;'
     substituteInPlace dist/cli.js \
-      --replace-fail '        execFileSync("npx", ["camoufox-js", "fetch"], { stdio: "inherit" });' '        if (process.env.CAMOFOX_EXECUTABLE_PATH) {
+      --replace-fail '        execFileSync("npx", ["camoufox-js", "fetch"], { stdio: "inherit" });' '        if (${camoufoxEnv.executableEnvJs}) {
             console.error("[camoufox-cli] Browser managed by Nix wrapper.");
             return;
         }
@@ -68,12 +71,13 @@ buildNpmPackage {
     mkdir -p $out/{bin,lib/${pname}}
 
     npm prune --omit=dev
+    ${camoufoxEnv.patchCamoufoxJs "node_modules/camoufox-js"}
 
     cp -r dist node_modules package.json LICENSE $out/lib/${pname}/
 
     makeWrapper ${lib.getExe nodejs} $out/bin/${pname} \
       --add-flags "$out/lib/${pname}/dist/cli.js" \
-      ${lib.optionalString (camoufox != null) "--set CAMOFOX_EXECUTABLE_PATH ${lib.getExe camoufox}"}
+      ${camoufoxEnv.wrapperBrowserArgs camoufox}
 
     runHook postInstall
   '';

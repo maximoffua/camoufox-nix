@@ -21,12 +21,18 @@ let
     };
   };
 
-  camofox-cli = pkgs.callPackage ./camofox-cli/package.nix { };
+  camofox-cli = pkgs.callPackage ./camofox-cli/package.nix {
+    inherit camoufox;
+  };
   camofox-browser = pkgs.callPackage ./camofox-browser/package.nix {
     inherit camoufox;
   };
-  jo-camofox-browser = pkgs.callPackage ./jo-camofox-browser/package.nix { };
-  camofox-mcp = pkgs.callPackage ./camofox-mcp/package.nix { };
+  jo-camofox-browser = pkgs.callPackage ./jo-camofox-browser/package.nix {
+    inherit camoufox;
+  };
+  camofox-mcp = pkgs.callPackage ./camofox-mcp/package.nix {
+    inherit camoufox;
+  };
 
   python-camoufox = pkgs.python3Packages.callPackage ./python-camoufox/default.nix {
     camoufox-browser = camoufox;
@@ -41,20 +47,8 @@ let
     withMcp = true;
   };
 
-  camoufox-js = pkgs.writeShellApplication {
-    name = "camoufox-js";
-    runtimeInputs = [ pkgs.nodejs ];
-    text = ''
-      echo "camoufox-js package source: https://github.com/apify/camoufox-js"
-      echo "npm package: camoufox-js@0.10.2"
-      echo "Full npm dependency packaging still TODO; use camoufox / python-camoufox for Nix-built browser bits."
-      exit 1
-    '';
-    meta = {
-      description = "Apify camoufox-js tarball launcher placeholder";
-      homepage = "https://github.com/apify/camoufox-js";
-      mainProgram = "camoufox-js";
-    };
+  camoufox-js = pkgs.callPackage ./camoufox-js/package.nix {
+    inherit camoufox;
   };
 
   camoufox-mcp-server = pkgs.writeShellApplication {

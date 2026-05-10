@@ -9,6 +9,7 @@
 }:
 
 let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-browser";
   version = "2.1.1";
 
@@ -46,7 +47,7 @@ buildNpmPackage {
 
   postPatch = ''
     substituteInPlace dist/src/services/context-pool.js \
-      --replace-fail 'const opts = await (0, camoufox_js_1.launchOptions)({' 'const opts = await (0, camoufox_js_1.launchOptions)({ ...(process.env.CAMOFOX_EXECUTABLE_PATH ? { executable_path: process.env.CAMOFOX_EXECUTABLE_PATH } : {}),'
+      --replace-fail 'const opts = await (0, camoufox_js_1.launchOptions)({' 'const opts = await (0, camoufox_js_1.launchOptions)({ ...(${camoufoxEnv.executableEnvJs} ? { executable_path: ${camoufoxEnv.executableEnvJs} } : {}),'
   '';
 
   installPhase = ''
@@ -55,12 +56,13 @@ buildNpmPackage {
     mkdir -p $out/{bin,lib/${pname}}
 
     npm prune --omit=dev --omit=optional
+    ${camoufoxEnv.patchCamoufoxJs "node_modules/camoufox-js"}
 
     cp -r dist bin node_modules package.json README.md CHANGELOG.md LICENSE $out/lib/${pname}/
 
     makeWrapper ${lib.getExe nodejs} $out/bin/camofox-browser \
       --add-flags "$out/lib/${pname}/bin/camofox-browser.js" \
-      ${lib.optionalString (camoufox != null) "--set CAMOFOX_EXECUTABLE_PATH ${lib.getExe camoufox}"}
+      ${camoufoxEnv.wrapperBrowserArgs camoufox}
 
     runHook postInstall
   '';

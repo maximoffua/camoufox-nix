@@ -5,9 +5,11 @@
   runCommand,
   makeWrapper,
   nodejs,
+  camoufox ? null,
 }:
 
 let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-mcp";
   version = "1.13.1";
 
@@ -50,10 +52,12 @@ buildNpmPackage {
     cp -r dist node_modules package.json README.md LICENSE $out/lib/${pname}/
 
     makeWrapper ${lib.getExe nodejs} $out/bin/camofox-mcp \
-      --add-flags "$out/lib/${pname}/dist/index.js"
+      --add-flags "$out/lib/${pname}/dist/index.js" \
+      ${camoufoxEnv.wrapperBrowserArgs camoufox}
 
     makeWrapper ${lib.getExe nodejs} $out/bin/camofox-mcp-http \
-      --add-flags "$out/lib/${pname}/dist/http.js"
+      --add-flags "$out/lib/${pname}/dist/http.js" \
+      ${camoufoxEnv.wrapperBrowserArgs camoufox}
 
     runHook postInstall
   '';

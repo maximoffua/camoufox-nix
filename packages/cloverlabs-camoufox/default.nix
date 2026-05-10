@@ -25,6 +25,9 @@
   camoufox-browser ? null,
 }:
 
+let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
+in
 buildPythonPackage rec {
   pname = "cloverlabs-camoufox";
   version = "0.5.5";
@@ -44,7 +47,7 @@ buildPythonPackage rec {
     p = Path("camoufox/pkgman.py")
     s = p.read_text()
     marker = 'def launch_path(browser_path: Optional[Path] = None) -> str:\n'
-    replacement = marker + '    env_path = os.environ.get("CAMOUFOX_EXECUTABLE_PATH") or os.environ.get("CAMOFOX_EXECUTABLE_PATH")\n    if env_path:\n        return env_path\n'
+    replacement = marker + '    env_path = os.environ.get("CAMOUFOX_EXECUTABLE") or os.environ.get("CAMOUFOX_EXECUTABLE_PATH") or os.environ.get("CAMOFOX_EXECUTABLE") or os.environ.get("CAMOFOX_EXECUTABLE_PATH")\n    if env_path:\n        return env_path\n'
     s = s.replace(marker, replacement)
     p.write_text(s)
     PY
@@ -77,7 +80,7 @@ buildPythonPackage rec {
 
   postFixup = lib.optionalString (camoufox-browser != null) ''
     wrapProgram "$out/bin/camoufox" \
-      --set CAMOUFOX_EXECUTABLE_PATH "${lib.getExe camoufox-browser}"
+      ${camoufoxEnv.wrapperBrowserArgs camoufox-browser}
   '';
 
   meta = {

@@ -12,6 +12,9 @@
   camoufox ? null,
 }:
 
+let
+  camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
+in
 buildPythonApplication rec {
   pname = "camoufox-browser";
   version = "0.1.1";
@@ -49,7 +52,7 @@ buildPythonApplication rec {
     s = s.replace('from dataclasses import dataclass, field\n', 'from dataclasses import dataclass, field\nimport os\n')
     s = s.replace(
         '        if self.os is not None:\n            kwargs["os"] = self.os\n',
-        '        executable_path = os.environ.get("CAMOUFOX_EXECUTABLE_PATH") or os.environ.get("CAMOFOX_EXECUTABLE_PATH")\n        if executable_path:\n            kwargs["executable_path"] = executable_path\n\n        if self.os is not None:\n            kwargs["os"] = self.os\n',
+        '        executable_path = os.environ.get("CAMOUFOX_EXECUTABLE") or os.environ.get("CAMOUFOX_EXECUTABLE_PATH") or os.environ.get("CAMOFOX_EXECUTABLE") or os.environ.get("CAMOFOX_EXECUTABLE_PATH")\n        if executable_path:\n            kwargs["executable_path"] = executable_path\n\n        if self.os is not None:\n            kwargs["os"] = self.os\n',
     )
     p.write_text(s)
     PY
@@ -68,10 +71,7 @@ buildPythonApplication rec {
   postFixup = ''
     wrapProgram "$out/bin/camoufox-browser" \
       --prefix PYTHONPATH : "$out/${python.sitePackages}" \
-      ${lib.optionalString (
-        camoufox != null
-      ) "--set CAMOUFOX_EXECUTABLE_PATH ${lib.getExe camoufox} \\"}
-      ${lib.optionalString (camoufox != null) "--set CAMOFOX_EXECUTABLE_PATH ${lib.getExe camoufox}"}
+      ${camoufoxEnv.wrapperBrowserArgs camoufox}
   '';
 
   meta = {

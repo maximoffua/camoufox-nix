@@ -34,6 +34,7 @@ let
   version = camoufoxSource.version;
   firefoxVersion = camoufoxSource.firefoxVersion;
   displayVersion = camoufoxSource.displayVersion;
+  camoufoxRelease = lib.removePrefix "${firefoxVersion}-" displayVersion;
   rev = camoufoxSource.rev;
   homepage =
     camoufoxSource.homepage or "https://github.com/${camoufoxSource.owner}/${camoufoxSource.repo}";
@@ -326,4 +327,5 @@ runCommand "camoufox-${version}"
     done
 
     cp -f "${settingsSource}/properties.json" "$out/bin/properties.json"
+    printf '{"version":"%s","release":"%s"}\n' '${firefoxVersion}' '${camoufoxRelease}' > "$out/bin/version.json"
   ''

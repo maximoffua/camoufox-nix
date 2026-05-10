@@ -1,0 +1,108 @@
+diff -ruN camoufox-0.4.11.orig/camoufox/__main__.py camoufox-0.4.11/camoufox/__main__.py
+--- camoufox-0.4.11.orig/camoufox/__main__.py	2026-05-10 02:51:16.551203581 +0200
++++ camoufox-0.4.11/camoufox/__main__.py	2026-05-10 02:51:16.595202166 +0200
+@@ -13,7 +13,7 @@
+
+ from .addons import DefaultAddons, maybe_download_addons
+ from .locale import ALLOW_GEOIP, download_mmdb, remove_mmdb
+-from .pkgman import INSTALL_DIR, CamoufoxFetcher, installed_verstr, rprint
++from .pkgman import INSTALL_DIR, CamoufoxFetcher, env_executable_path, installed_verstr, rprint
+
+ try:
+     from browserforge.download import download as update_browserforge
+@@ -83,6 +83,9 @@
+     """
+     Fetch the latest version of Camoufox and optionally update Browserforge's database
+     """
++    if env_executable_path():
++        rprint("Camoufox browser managed by Nix wrapper.", fg="yellow")
++        return
+     CamoufoxUpdate().update()
+     # Fetch the GeoIP database
+     if ALLOW_GEOIP:
+@@ -136,7 +139,7 @@
+     """
+     Display the path to the Camoufox executable
+     """
+-    rprint(INSTALL_DIR, fg="green")
++    rprint(env_executable_path() or INSTALL_DIR, fg="green")
+
+
+ @cli.command(name='version')
+diff -ruN camoufox-0.4.11.orig/camoufox/pkgman.py camoufox-0.4.11/camoufox/pkgman.py
+--- camoufox-0.4.11.orig/camoufox/pkgman.py	2026-05-10 02:51:16.551203581 +0200
++++ camoufox-0.4.11/camoufox/pkgman.py	2026-05-10 02:51:16.594202198 +0200
+@@ -69,6 +69,21 @@
+ }
+
+
++def env_executable_path() -> Optional[Path]:
++    executable = (
++        os.environ.get('CAMOUFOX_EXECUTABLE')
++        or os.environ.get('CAMOUFOX_EXECUTABLE_PATH')
++        or os.environ.get('CAMOFOX_EXECUTABLE')
++        or os.environ.get('CAMOFOX_EXECUTABLE_PATH')
++    )
++    return Path(executable).resolve() if executable else None
++
++
++def env_executable_dir() -> Optional[Path]:
++    executable = env_executable_path()
++    return executable.parent if executable else None
++
++
+ def rprint(*a, **k):
+     click.secho(*a, **k, bold=True)
+
+@@ -406,13 +421,16 @@
+     """
+     Get the full version string of the installed camoufox.
+     """
+-    return Version.from_path().full_string
++    return Version.from_path(env_executable_dir()).full_string
+
+
+ def camoufox_path(download_if_missing: bool = True) -> Path:
+     """
+     Full path to the camoufox folder.
+     """
++    executable_dir = env_executable_dir()
++    if executable_dir:
++        return executable_dir
+
+     # Ensure the directory exists and is not empty
+     if not os.path.exists(INSTALL_DIR) or not os.listdir(INSTALL_DIR):
+@@ -446,6 +464,12 @@
+     """
+     Get the path to the camoufox executable.
+     """
++    executable = env_executable_path()
++    if executable:
++        if not executable.exists():
++            raise CamoufoxNotInstalled(f"Camoufox executable not found at {executable}")
++        return str(executable)
++
+     launch_path = get_path(LAUNCH_FILE[OS_NAME])
+     if not os.path.exists(launch_path):
+         # Not installed error
+diff -ruN camoufox-0.4.11.orig/camoufox/utils.py camoufox-0.4.11/camoufox/utils.py
+--- camoufox-0.4.11.orig/camoufox/utils.py	2026-05-10 02:51:16.552203549 +0200
++++ camoufox-0.4.11/camoufox/utils.py	2026-05-10 02:51:16.595202166 +0200
+@@ -24,7 +24,7 @@
+ from .fingerprints import from_browserforge, generate_fingerprint
+ from .ip import Proxy, public_ip, valid_ipv4, valid_ipv6
+ from .locale import geoip_allowed, get_geolocation, handle_locales
+-from .pkgman import OS_NAME, get_path, installed_verstr, launch_path
++from .pkgman import OS_NAME, env_executable_path, get_path, installed_verstr, launch_path
+ from .virtdisplay import VirtualDisplay
+ from .warnings import LeakWarning
+ from .webgl import sample_webgl
+@@ -465,6 +465,8 @@
+         i_know_what_im_doing = False
+     if env is None:
+         env = cast(Dict[str, Union[str, float, bool]], environ)
++    if executable_path is None:
++        executable_path = env_executable_path()
+     if isinstance(executable_path, str):
+         # Convert executable path to a Path object
+         executable_path = Path(abspath(executable_path))
