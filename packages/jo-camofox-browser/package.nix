@@ -15,16 +15,16 @@ let
 in
 buildNpmPackage rec {
   pname = "jo-camofox-browser";
-  version = "1.8.15";
+  version = "1.9.1";
 
   src = fetchFromGitHub {
-    owner = "jo-inc";
+    owner = "maximoffua";
     repo = "camofox-browser";
-    rev = "2a0be78c732c6b7efacaec0193a88ca22c4925b4";
-    hash = "sha256-FMPwkLwFhMVF04NasmBb/RJe6Z0Ta1fqZm4piaHQOdE=";
+    rev = "13faabc9bc15bd5e0f6ebc265b2ac3cd9cef0e06";
+    hash = "sha256-pV+fqq0H2DRMBOcDNKdUOpxIhZzhHg1Db4WH9lbBCV4=";
   };
 
-  npmDepsHash = "sha256-vtxkCVXOKr335LummXm4aznt642qbDVpGh+pu23pLaI=";
+  npmDepsHash = "sha256-Ps5gZnX9AInbGSgkas+bsvx5f//LkHWpy96XZ/JvUm4=";
 
   makeCacheWritable = true;
   npmFlags = [
