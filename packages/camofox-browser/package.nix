@@ -24,7 +24,7 @@ let
     cp ${
       fetchurl {
         url = "https://raw.githubusercontent.com/redf0x1/camofox-browser/main/package-lock.json";
-        hash = "sha256-tL6d3FMfgr1Zu+pHWyvFxEwGN/IWdKEZfsFnJ8UUCTI=";
+        hash = "sha256-/sedDmDduHkIXMnGMlDwnd8QeUdpMd7nd+yP8tD2KqI=";
       }
     } $out/package-lock.json
   '';
@@ -34,7 +34,7 @@ buildNpmPackage {
 
   src = srcWithLock;
 
-  npmDepsHash = "sha256-PZR+da/OKl425p4TKnDD4imhEZQdWiSamViOE27Q3wQ=";
+  npmDepsHash = "sha256-u3jsYV9gfFRz9jn2na4OEBgUvE3w3o9FLOH1y1SwogQ=";
 
   makeCacheWritable = true;
   npmFlags = [ ];
