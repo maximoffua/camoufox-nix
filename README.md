@@ -41,6 +41,7 @@ Need something fast? `nix run .#camoufox-python -- --help` finishes in seconds a
 | `camofox-browser` | redf0x1 Node REST/browser server | ⚡ fast | all |
 | `jo-camofox-browser` | jo-inc Node REST/browser server with OpenAPI docs and plugins | ⚡ fast | all |
 | `camofox-mcp` | redf0x1 Node MCP server (working) | ⚡ fast | all |
+| `camoufox-reverse-mcp` | WhiteNightShadow Python MCP server for JS reverse engineering | ⚡ fast | all |
 | `camoufox-js` | ⚠️ placeholder (Apify, npm graph not vendored) | — | — |
 | `camoufox-mcp-server` | ⚠️ placeholder (whit3rabbit, npm graph not vendored) | — | — |
 | `foxbridge` | Go CDP-to-Firefox protocol proxy | ⚡ fast | all |
@@ -183,6 +184,21 @@ CAMOFOX_EXECUTABLE_PATH=$(nix build .#camoufox --no-link --print-out-paths)/bin/
 ```
 
 This is the package the `docker-camoufox-camofox-mcp` image runs as its entrypoint. Wiring up an agent (Claude Code, Codex, OpenCode, Cursor, etc.) over MCP? **This is the one.** Not `camoufox-mcp-server`.
+
+---
+
+### 🧰 `camoufox-reverse-mcp` — JS reverse-engineering MCP server
+
+[WhiteNightShadow/camoufox-reverse-mcp](https://github.com/WhiteNightShadow/camoufox-reverse-mcp). Python MCP server with Camoufox-backed tools for JavaScript reverse engineering: script search, hooks, network capture, storage/cookie inspection, fingerprint comparison, and JSVMP helpers.
+
+```bash
+nix run .#camoufox-reverse-mcp -- --help
+
+CAMOFOX_EXECUTABLE_PATH=$(nix build .#camoufox --no-link --print-out-paths)/bin/camoufox \
+  nix run .#camoufox-reverse-mcp -- --headless
+```
+
+For MCP clients, use command `camoufox-reverse-mcp` and args such as `--headless`, `--proxy http://127.0.0.1:7890`, `--geoip`, or `--humanize`.
 
 ---
 
@@ -341,6 +357,7 @@ Drops you into a shell with `jj`, `nixfmt-rfc-style`, `nixpkgs-fmt`, `nodejs`, `
 - **Default smoke check:** `nix run . -- --help` (this is `python-camoufox`).
 - **Need an actual browser binary path:** `nix build .#camoufox --no-link --print-out-paths` and append `/bin/camoufox`. Linux only.
 - **Need an MCP server:** use `.#camofox-mcp`. **Not** `.#camoufox-mcp-server` — that one is a placeholder.
+- **Need JS reverse-engineering MCP tools:** use `.#camoufox-reverse-mcp`.
 - **Need a Node CLI:** `.#camofox-cli`.
 - **Need jo-inc REST/OpenAPI browser server:** `.#jo-camofox-browser`.
 - **Need a CDP client to drive Camoufox:** `.#foxbridge`.
@@ -364,6 +381,7 @@ Drops you into a shell with `jj`, `nixfmt-rfc-style`, `nixpkgs-fmt`, `nodejs`, `
 │   ├── camofox-browser/
 │   ├── jo-camofox-browser/
 │   ├── camofox-mcp/
+│   ├── camoufox-reverse-mcp/
 │   ├── camoufox-browser-cli/
 │   ├── cloverlabs-camoufox/
 │   ├── python-camoufox/
@@ -373,7 +391,7 @@ Drops you into a shell with `jj`, `nixfmt-rfc-style`, `nixpkgs-fmt`, `nodejs`, `
 └── AGENTS.md                # repo-level instructions for AI agents
 ```
 
-`camoufox-vulpineos`, `camoufox-js` and `camoufox-mcp-server` don't have their own folders — they're produced by override / `writeShellApplication` directly in `packages/default.nix`.
+`camoufox-vulpineos` is produced by override in `packages/default.nix`; `camoufox-mcp-server` is a direct placeholder there until its npm graph is packaged.
 
 ---
 

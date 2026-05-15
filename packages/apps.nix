@@ -14,6 +14,7 @@ in
   camofox-browser = app packages.camofox-browser;
   jo-camofox-browser = app packages.jo-camofox-browser;
   camofox-mcp = app packages.camofox-mcp;
+  camoufox-reverse-mcp = app packages.camoufox-reverse-mcp;
   camoufox-js = app packages.camoufox-js;
   camoufox-mcp-server = app packages.camoufox-mcp-server;
   camoufox-browser-cli = app packages.camoufox-browser-cli;
