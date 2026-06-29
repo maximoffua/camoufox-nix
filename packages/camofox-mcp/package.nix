@@ -24,9 +24,15 @@ let
     cp ${
       fetchurl {
         url = "https://raw.githubusercontent.com/redf0x1/camofox-mcp/main/package-lock.json";
-        hash = "sha256-TDf/RwxipJBz+64JwssX97Gt4RuPF5/SSHCe9vE7Wcs=";
+        hash = "sha256-UnI04NRcZ86nI1l6xmF33fJbPaOMkHdJu7En3KjlAlQ=";
       }
     } $out/package-lock.json
+    cp ${
+      fetchurl {
+        url = "https://raw.githubusercontent.com/redf0x1/camofox-mcp/main/package.json";
+        hash = "sha256-2s67zT2pqfeX45XwoYsyY1M+HgBbNDvsZj+QWvt5rOY=";
+      }
+    } $out/package.json
   '';
 in
 buildNpmPackage {
@@ -34,8 +40,9 @@ buildNpmPackage {
 
   src = srcWithLock;
 
-  npmDepsHash = "sha256-YdeHlxb3XZlMI4TSnmPYWKIXxQfH87J+qHJi4xG8Ku8=";
+  npmDepsHash = "sha256-/5KhbpF/jUqJ1umBoRLGxUcBOl6zknY9cCJh67T9+HE=";
 
+  npmDepsFetcherVersion = 2;
   makeCacheWritable = true;
   npmFlags = [ "--ignore-scripts" ];
   dontNpmBuild = true;
