@@ -8,6 +8,7 @@ let
 in
 {
   camoufox = app packages.camoufox;
+  camoufox-bin = app packages.camoufox-bin;
   camoufox-vulpineos = app packages.camoufox-vulpineos;
   camoufox-python = app packages.python-camoufox;
   camofox-cli = app packages.camofox-cli;

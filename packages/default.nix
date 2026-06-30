@@ -3,6 +3,8 @@
 let
   camoufox = pkgs.callPackage ./camoufox/package.nix { };
 
+  camoufox-bin = pkgs.callPackage ./camoufox-bin/package.nix { };
+
   camoufox-vulpineos = camoufox.override {
     camoufoxSource = {
       owner = "VulpineOS";
@@ -79,6 +81,7 @@ in
 {
   inherit
     camoufox
+    camoufox-bin
     camoufox-vulpineos
     python-camoufox
     camofox-cli
