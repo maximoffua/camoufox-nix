@@ -31,16 +31,20 @@ x86_version="${x86_version%-lin.x86_64.zip}"
 arm_version="${arm_asset#camoufox-}"
 arm_version="${arm_version%-lin.arm64.zip}"
 
-# Hash an asset without importing it into the store: download to a temp dir,
+# One temp dir for the whole run, cleaned up on any exit.
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+# Hash an asset without importing it into the store: download to the temp dir,
 # unpack, and take the NAR hash fetchzip expects.
 sri() {
   local dir hash
-  dir="$(mktemp -d)"
+  dir="$tmpdir/$1"
+  mkdir -p "$dir"
   echo "camoufox-bin-update: downloading $1" >&2
   curl -fL --progress-bar -o "$dir/$1" "https://github.com/$repo/releases/download/$tag/$1"
   unzip -q "$dir/$1" -d "$dir/unpacked"
   hash="$(nix hash path --type sha256 --sri "$dir/unpacked")"
-  rm -rf "$dir"
   printf '%s\n' "$hash"
 }
 

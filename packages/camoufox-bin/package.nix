@@ -42,10 +42,18 @@ let
     aarch64-linux = "arm64";
   };
   system = stdenv.hostPlatform.system;
+  isSupported = (archTokens ? ${system}) && (sources ? ${system});
+  # Fall back to a placeholder on unsupported systems so evaluation (nix flake
+  # show/check) doesn't crash; meta.platforms keeps it from building there.
   source =
-    sources.${system}
-      or (throw "camoufox-bin: unsupported system '${system}' (only x86_64-linux and aarch64-linux are supported)");
-  asset = "camoufox-${source.version}-lin.${archTokens.${system}}.zip";
+    if isSupported then
+      sources.${system}
+    else
+      {
+        version = "0";
+        hash = lib.fakeHash;
+      };
+  asset = "camoufox-${source.version}-lin.${archTokens.${system} or "unknown"}.zip";
 
   libDir = "lib/camoufox-bin-${displayVersion}";
 in
