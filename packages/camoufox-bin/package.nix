@@ -2,6 +2,13 @@
   lib,
   stdenv,
   fetchzip,
+  # updateScript runtime tools
+  writeShellApplication,
+  gh,
+  jq,
+  nix,
+  unzip,
+  coreutils,
   autoPatchelfHook,
   patchelfUnstable, # required for --no-clobber-old-sections (Firefox relrhack)
   wrapGAppsHook3,
@@ -15,41 +22,30 @@
   curl,
   pciutils,
   pipewire,
-  # Prebuilt Camoufox release to wrap. Override to track a different upstream
-  # release without rebuilding Firefox from source.
-  camoufoxBinSource ? {
-    release = "v150.0.2-beta.25";
-    firefoxVersion = "150.0.2";
-    displayVersion = "150.0.2-beta.25";
-    homepage = "https://github.com/daijro/camoufox";
-    # Per-system assets. The upstream sub-version (alpha.N) differs between
-    # architectures, so each entry carries its own asset name and hash.
-    sources = {
-      x86_64-linux = {
-        asset = "camoufox-150.0.2-alpha.26-lin.x86_64.zip";
-        hash = "sha256-F/J3HNsGAmlpl4FUdT6vFJwQA0djWEdDjI8heho0zcc=";
-      };
-      aarch64-linux = {
-        asset = "camoufox-150.0.2-alpha.25-lin.arm64.zip";
-        hash = "sha256-1RklLSkT8iux5I2OsuUP/7KOU5IH4y3bT5Eev0CXnEU=";
-      };
-    };
-  },
+  # Prebuilt Camoufox release to wrap, read from versions.json so the updater
+  # can rewrite it with jq. Override to track a different upstream release. Each
+  # arch carries its own version because the upstream sub-version (alpha.N)
+  # differs between them.
+  camoufoxBinSource ? lib.importJSON ./versions.json,
 }:
 let
-  inherit (camoufoxBinSource)
-    release
-    firefoxVersion
-    displayVersion
-    sources
-    ;
-  homepage = camoufoxBinSource.homepage or "https://github.com/daijro/camoufox";
+  inherit (camoufoxBinSource) release sources;
+  homepage = "https://github.com/daijro/camoufox";
+
+  displayVersion = lib.removePrefix "v" release;
+  firefoxVersion = builtins.head (lib.splitString "-" displayVersion);
   camoufoxRelease = lib.removePrefix "${firefoxVersion}-" displayVersion;
 
+  # Token used in the upstream asset name per Nix system.
+  archTokens = {
+    x86_64-linux = "x86_64";
+    aarch64-linux = "arm64";
+  };
   system = stdenv.hostPlatform.system;
   source =
     sources.${system}
-      or (throw "camoufox-bin: unsupported system '${system}' (only x86_64-linux and aarch64-linux are available upstream)");
+      or (throw "camoufox-bin: unsupported system '${system}' (only x86_64-linux and aarch64-linux are supported)");
+  asset = "camoufox-${source.version}-lin.${archTokens.${system}}.zip";
 
   libDir = "lib/camoufox-bin-${displayVersion}";
 in
@@ -58,7 +54,7 @@ stdenv.mkDerivation {
   version = displayVersion;
 
   src = fetchzip {
-    url = "${homepage}/releases/download/${release}/${source.asset}";
+    url = "${homepage}/releases/download/${release}/${asset}";
     inherit (source) hash;
     # The archive unpacks flat (camoufox-bin and the shared libraries sit at the
     # root), so there is no single directory to strip.
@@ -139,6 +135,18 @@ stdenv.mkDerivation {
       release
       ;
     category = "Browsers";
+    updateScript = writeShellApplication {
+      name = "camoufox-bin-update";
+      runtimeInputs = [
+        gh
+        curl
+        jq
+        nix
+        unzip
+        coreutils
+      ];
+      text = builtins.readFile ./update.sh;
+    };
   };
 
   meta = {

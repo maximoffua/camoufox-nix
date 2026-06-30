@@ -4,9 +4,12 @@
   lib,
   callPackage,
   tools ? { },
+  # Forwarded to package.nix so `camoufox-bin.override { camoufoxBinSource = … }`
+  # reaches the browser through this wrapper.
+  camoufoxBinSource ? lib.importJSON ./versions.json,
 }:
 let
-  browser = callPackage ./package.nix { };
+  browser = callPackage ./package.nix { inherit camoufoxBinSource; };
 
   argsOf = drv: if drv ? override then lib.functionArgs drv.override else { };
 

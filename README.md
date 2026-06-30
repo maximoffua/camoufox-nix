@@ -108,17 +108,15 @@ These are derived automatically — any package wired to Camoufox (directly, or 
 
 For wiring your own out-of-flake package, each tool still takes the browser as a `callPackage` argument (`camoufox`, or `camoufox-browser` for the Python SDKs), so `pkg.override { camoufox = p.camoufox-bin; }` works too.
 
-Track a different release by overriding `camoufoxBinSource` — per-arch `asset` + `hash`:
+The pin lives in `packages/camoufox-bin/versions.json` — run `nix run .#camoufox-bin.updateScript` (optionally `-- <tag>`) from the repo root to bump it to the latest release. To track a different release ad-hoc, override `camoufoxBinSource` — just the `release` tag plus each arch's `version` (the differing `alpha.N`) and `hash`; the asset name and Firefox version are derived:
 
 ```nix
 camoufox-bin-next = camoufox-bin.override {
   camoufoxBinSource = {
     release = "v150.0.2-beta.25";
-    firefoxVersion = "150.0.2";
-    displayVersion = "150.0.2-beta.25";
     sources = {
-      x86_64-linux = { asset = "camoufox-150.0.2-alpha.26-lin.x86_64.zip"; hash = "sha256-..."; };
-      aarch64-linux = { asset = "camoufox-150.0.2-alpha.25-lin.arm64.zip"; hash = "sha256-..."; };
+      x86_64-linux = { version = "150.0.2-alpha.26"; hash = "sha256-..."; };
+      aarch64-linux = { version = "150.0.2-alpha.25"; hash = "sha256-..."; };
     };
   };
 };
