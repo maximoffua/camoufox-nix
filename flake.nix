@@ -24,7 +24,11 @@
       ];
 
       perSystem =
-        { config, pkgs, ... }:
+        {
+          config,
+          pkgs,
+          ...
+        }:
         let
           packages = config.packages;
 
@@ -100,7 +104,7 @@
 
           devShells.default = pkgs.mkShell {
             packages = [
-              pkgs.jj
+              pkgs.jujutsu
               pkgs.nixfmt-rfc-style
               pkgs.nixpkgs-fmt
               pkgs.nodejs
