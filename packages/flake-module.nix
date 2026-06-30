@@ -1,5 +1,4 @@
 { ... }:
-
 let
   mkPackages = import ./default.nix;
   mkApps = import ./apps.nix;

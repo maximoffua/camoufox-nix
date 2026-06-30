@@ -95,24 +95,18 @@ nix run .#camoufox-bin -- --headless --screenshot "$PWD/camoufox-bin.png" https:
 
 ⚠️ **Linux only** (`x86_64` + `aarch64`). No Firefox compile, but it fetches a ~660 MB release zip the first time. The bundled fonts are wired up via `FONTCONFIG_FILE` so a bare launch fingerprints the same as the python/JS launchers.
 
-#### Point another tool at the prebuilt browser
+#### Ready-made tool variants
 
-Every browser-launching package takes the browser as a `callPackage` argument, so a flake consumer can swap it with `.override` — **no need to edit this flake**:
+Every tool in this flake that uses Camoufox is also exposed pre-wired to the prebuilt browser, as a subpackage under `camoufox-bin`. No override needed:
 
-```nix
-# in your own flake, with camoufox-nix as an input:
-let p = camoufox-nix.packages.${system};
-in p.camofox-mcp.override { camoufox = p.camoufox-bin; }
+```bash
+nix build .#camoufox-bin.python-camoufox
+nix run   .#camoufox-bin.camoufox-reverse-mcp -- --help
 ```
 
-Most tools use the arg `camoufox`: `camofox-cli`, `camofox-browser`, `jo-camofox-browser`, `camofox-mcp`, `camoufox-js`, `camoufox-reverse-mcp`, and `camoufox-browser-cli`. The two Python interfaces name the arg `camoufox-browser` instead:
+These are derived automatically — any package wired to Camoufox (directly, or transitively through another package, to any depth) gets a `camoufox-bin.<name>` variant whose whole closure uses the prebuilt browser, with zero from-source Firefox build.
 
-```nix
-p.python-camoufox.override    { camoufox-browser = p.camoufox-bin; }
-p.cloverlabs-camoufox.override { camoufox-browser = p.camoufox-bin; }
-```
-
-Not everything bundles a browser: `foxbridge`, `vulpineos`, the `camoufox-mcp-server` placeholder, and `vulpineos-camoufox-notes` take no browser input — they connect to one at runtime, so there's nothing to override.
+For wiring your own out-of-flake package, each tool still takes the browser as a `callPackage` argument (`camoufox`, or `camoufox-browser` for the Python SDKs), so `pkg.override { camoufox = p.camoufox-bin; }` works too.
 
 Track a different release by overriding `camoufoxBinSource` — per-arch `asset` + `hash`:
 
