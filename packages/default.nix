@@ -1,5 +1,4 @@
 { pkgs }:
-
 let
   camoufox = pkgs.callPackage ./camoufox/package.nix { };
 
@@ -75,25 +74,30 @@ let
   foxbridge = pkgs.callPackage ./foxbridge/package.nix { };
   vulpineos = pkgs.callPackage ./vulpineos/package.nix { };
   vulpineos-camoufox-notes = pkgs.callPackage ./vulpineos-camoufox-notes/default.nix { };
-in
-{
-  inherit
-    camoufox
-    camoufox-vulpineos
-    python-camoufox
-    camofox-cli
-    camofox-browser
-    jo-camofox-browser
-    camofox-mcp
-    camoufox-reverse-mcp
-    camoufox-js
-    camoufox-mcp-server
-    vulpineos-camoufox-notes
-    cloverlabs-camoufox
-    camoufox-browser-cli
-    foxbridge
-    vulpineos
-    ;
 
+  # Collected once so camoufox-bin can derive its variants from the same set.
+  packages = {
+    inherit
+      camoufox
+      camoufox-vulpineos
+      python-camoufox
+      camofox-cli
+      camofox-browser
+      jo-camofox-browser
+      camofox-mcp
+      camoufox-reverse-mcp
+      camoufox-js
+      camoufox-mcp-server
+      vulpineos-camoufox-notes
+      cloverlabs-camoufox
+      camoufox-browser-cli
+      foxbridge
+      vulpineos
+      ;
+  };
+in
+packages
+// {
+  camoufox-bin = pkgs.callPackage ./camoufox-bin { tools = packages; };
   default = python-camoufox;
 }

@@ -33,6 +33,7 @@ Need something fast? `nix run .#camoufox-python -- --help` finishes in seconds a
 | Package | What it is | Build cost | Runs on |
 |---|---|---|---|
 | `camoufox` | Patched Firefox source build (daijro/camoufox) — the actual browser | 🔥 heavy | linux only |
+| `camoufox-bin` | Same browser from a prebuilt upstream release, patchelf'd for NixOS — no compile | medium (big dl) | linux only |
 | `camoufox-vulpineos` | Same builder, VulpineOS fork source | 🔥 heavy | linux only |
 | `python-camoufox` *(default)* | Python SDK from PyPI, wired to the Nix browser | ⚡ fast | all |
 | `cloverlabs-camoufox` | CloverLabsAI Python interface, GeoIP enabled | ⚡ fast | all |
@@ -73,6 +74,53 @@ export CAMOUFOX_EXECUTABLE_PATH=$(nix build .#camoufox --no-link --print-out-pat
 ```
 
 The builder (`packages/camoufox/package.nix`) takes a `camoufoxSource` override — see `camoufox-vulpineos` for an example.
+
+---
+
+### 🦊 `camoufox-bin` — prebuilt browser (no compile)
+
+Same browser as `camoufox`, but unpacked from the official [daijro/camoufox release](https://github.com/daijro/camoufox/releases) and patched to run on NixOS (`autoPatchelfHook` + GTK wrapper) instead of compiling Firefox from source. Drop-in replacement: it exposes the same `bin/camoufox`, `version.json`, and `properties.json`, so every consumer that takes `CAMOUFOX_EXECUTABLE` / `CAMOFOX_EXECUTABLE_PATH` works against it unchanged.
+
+```bash
+nix build .#camoufox-bin
+nix run .#camoufox-bin -- --version
+./result/bin/camoufox https://example.com
+```
+
+Write a headless screenshot to prove it renders natively:
+
+```bash
+nix run .#camoufox-bin -- --headless --screenshot "$PWD/camoufox-bin.png" https://example.com
+```
+
+⚠️ **Linux only** (`x86_64` + `aarch64`). No Firefox compile, but it fetches a ~660 MB release zip the first time. The bundled fonts are wired up via `FONTCONFIG_FILE` so a bare launch fingerprints the same as the python/JS launchers.
+
+#### Ready-made tool variants
+
+Every tool in this flake that uses Camoufox is also exposed pre-wired to the prebuilt browser, as a subpackage under `camoufox-bin`. No override needed:
+
+```bash
+nix build .#camoufox-bin.python-camoufox
+nix run   .#camoufox-bin.camoufox-reverse-mcp -- --help
+```
+
+These are derived automatically — any package wired to Camoufox (directly, or transitively through another package, to any depth) gets a `camoufox-bin.<name>` variant whose whole closure uses the prebuilt browser, with zero from-source Firefox build.
+
+For wiring your own out-of-flake package, each tool still takes the browser as a `callPackage` argument (`camoufox`, or `camoufox-browser` for the Python SDKs), so `pkg.override { camoufox = p.camoufox-bin; }` works too.
+
+The pin lives in `packages/camoufox-bin/versions.json` — run `nix run .#camoufox-bin.updateScript` (optionally `-- <tag>`) from the repo root to bump it to the latest release. To track a different release ad-hoc, override `camoufoxBinSource` — just the `release` tag plus each arch's `version` (the differing `alpha.N`) and `hash`; the asset name and Firefox version are derived:
+
+```nix
+camoufox-bin-next = camoufox-bin.override {
+  camoufoxBinSource = {
+    release = "v150.0.2-beta.25";
+    sources = {
+      x86_64-linux = { version = "150.0.2-alpha.26"; hash = "sha256-..."; };
+      aarch64-linux = { version = "150.0.2-alpha.25"; hash = "sha256-..."; };
+    };
+  };
+};
+```
 
 ---
 
@@ -377,6 +425,7 @@ Drops you into a shell with `jj`, `nixfmt-rfc-style`, `nixpkgs-fmt`, `nodejs`, `
 │   ├── apps.nix             # nix run targets
 │   ├── flake-module.nix     # flake-parts module + overlay export
 │   ├── camoufox/            # the browser source build
+│   ├── camoufox-bin/        # the browser from a prebuilt release, patchelf'd
 │   ├── camofox-cli/
 │   ├── camofox-browser/
 │   ├── jo-camofox-browser/
