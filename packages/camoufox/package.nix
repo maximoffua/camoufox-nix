@@ -172,8 +172,9 @@ let
         inherit binaryName;
         src = upstreamSrc;
 
-        requireSigning = false;
-        allowAddonSideload = true;
+        # nixpkgs removed requireSigning/allowAddonSideload from the
+        # buildMozillaMach head; the knobs moved into the mach package's
+        # own args (set in the .override below).
         branding = "browser/branding/camoufox";
 
         unpackPhase = ''
@@ -294,11 +295,20 @@ let
         };
       }).override
       {
+        # nixpkgs buildMozillaMach API rename (nixpkgs >= 801bef6-era):
+        # crashreporterSupport -> enableCrashReporter, ltoSupport ->
+        # enableLTO, pgoSupport -> enablePGO; addon knobs added here after
+        # being removed from the head args.
         enableDebugSymbols = false;
-        crashreporterSupport = false;
+        enableCrashReporter = false;
         enableOfficialBranding = false;
-        ltoSupport = false;
-        pgoSupport = false;
+        enableLTO = false;
+        enablePGO = false;
+        # was: requireSigning = false (head arg) — camoufox sideloads its own
+        # patches/settings, unsigned addons must load.
+        enableAddonSigning = false;
+        # was: allowAddonSideload = true (head arg).
+        enableAddonSideload = true;
       }
     ).overrideAttrs
       (old: {
