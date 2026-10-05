@@ -50,6 +50,9 @@ let
   settingsSource = upstreamSrc + "/settings";
   additionsSource = upstreamSrc + "/additions";
 
+  # mach's rust.configure cannot translate autotools triples
+  # (`x86_64-pc-linux-gnu` -> "Don't know how to translate ... for rustc")
+  # on older source trees (Firefox 146 era); emit Rust triples instead.
   linuxMozTarget =
     camoufoxSource.mozTarget or (
       let
@@ -58,9 +61,9 @@ let
       if cpuName == "aarch64" || cpuName == "arm64" then
         "aarch64-unknown-linux-gnu"
       else if cpuName == "i686" then
-        "i686-pc-linux-gnu"
+        "i686-unknown-linux-gnu"
       else if cpuName == "x86_64" then
-        "x86_64-pc-linux-gnu"
+        "x86_64-unknown-linux-gnu"
       else
         throw "Unsupported Linux moz target CPU: ${toString cpuName}"
     );
