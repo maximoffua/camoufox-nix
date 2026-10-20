@@ -1,0 +1,3 @@
+# Preserve upstream one-click MCP client integration
+
+Retain BrowserOS neo's one-click setup for supported MCP clients, including its ability to modify those clients' configuration when explicitly invoked. Requiring users to configure clients manually would avoid writes outside the browser profile, but would diverge from upstream AppImage behavior. Do not add automatic configuration writes on normal browser startup.

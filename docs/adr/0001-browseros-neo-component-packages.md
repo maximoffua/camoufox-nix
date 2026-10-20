@@ -1,0 +1,3 @@
+# Package BrowserOS neo as separate components with a unified launcher
+
+Build and expose BrowserOS neo browser, Rust MCP server, and extension as separate Nix packages, alongside a unified `browseros-neo` application that starts the complete stack. A monolithic package would be simpler, but separate outputs let users depend on individual components without giving up upstream AppImage-style one-command startup. Build all source components from one pinned Neo release revision rather than independently updating components, to reduce compatibility risk. Nix—not upstream OTA—owns updates.

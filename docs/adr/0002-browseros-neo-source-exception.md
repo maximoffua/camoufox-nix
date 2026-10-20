@@ -1,0 +1,3 @@
+# Bundle upstream prebuilt bug-reporter extension
+
+Build BrowserOS neo Chromium, MCP server, main extension, and onboarding resources from source, following upstream CI/CD. Bundle the upstream prebuilt bug-reporter extension with a fixed version and hash because upstream's own source-mode pipeline downloads it and a complete source-build path is not established. Reject additional prebuilt application components; never download extensions or binaries at runtime.
