@@ -78,6 +78,13 @@ let
   foxbridge = pkgs.callPackage ./foxbridge/package.nix { };
   vulpineos = pkgs.callPackage ./vulpineos/package.nix { };
   vulpineos-camoufox-notes = pkgs.callPackage ./vulpineos-camoufox-notes/default.nix { };
+  browseros-neo-source = pkgs.callPackage ./browseros-neo/source.nix { };
+  browseros-neo-server = pkgs.callPackage ./browseros-neo/server.nix {
+    source = browseros-neo-source;
+  };
+  browseros-neo-extension = pkgs.callPackage ./browseros-neo/extension.nix {
+    source = browseros-neo-source;
+  };
 
   # Collected once so camoufox-bin can derive its variants from the same set.
   packages = {
@@ -97,6 +104,8 @@ let
       camoufox-browser-cli
       foxbridge
       vulpineos
+      browseros-neo-server
+      browseros-neo-extension
       ;
   };
 in
