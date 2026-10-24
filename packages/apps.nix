@@ -21,5 +21,6 @@ in
   camoufox-browser-cli = app packages.camoufox-browser-cli;
   foxbridge = app packages.foxbridge;
   vulpineos = app packages.vulpineos;
-  default = app packages.python-camoufox;
+  browseros-neo = app packages.browseros-neo;
+  default = app packages.browseros-neo;
 }

@@ -84,6 +84,23 @@ let
   };
   browseros-neo-extension = pkgs.callPackage ./browseros-neo/extension.nix {
     source = browseros-neo-source;
+    bunDeps = browseros-neo-bun-deps;
+  };
+  browseros-neo-onboarding = pkgs.callPackage ./browseros-neo/onboarding.nix {
+    source = browseros-neo-source;
+    bunDeps = browseros-neo-bun-deps;
+  };
+  browseros-neo-bun-deps = pkgs.callPackage ./browseros-neo/bun-deps.nix {
+    source = browseros-neo-source;
+  };
+  browseros-neo-browser = pkgs.callPackage ./browseros-neo/browser.nix {
+    source = browseros-neo-source;
+    server = browseros-neo-server;
+    onboarding = browseros-neo-onboarding;
+  };
+  browseros-neo = pkgs.callPackage ./browseros-neo/wrapper.nix {
+    browser = browseros-neo-browser;
+    extension = browseros-neo-extension;
   };
 
   # Collected once so camoufox-bin can derive its variants from the same set.
@@ -106,11 +123,14 @@ let
       vulpineos
       browseros-neo-server
       browseros-neo-extension
+      browseros-neo-onboarding
+      browseros-neo-browser
+      browseros-neo
       ;
   };
 in
 packages
 // {
   camoufox-bin = pkgs.callPackage ./camoufox-bin { tools = packages; };
-  default = python-camoufox;
+  default = browseros-neo;
 }

@@ -10,8 +10,16 @@ rustPlatform.buildRustPackage {
   src = "${source}/packages/browseros-agent";
 
   cargoLock.lockFile = "${source}/packages/browseros-agent/Cargo.lock";
-  cargoBuildFlags = [ "-p" "claw-server" "--bin" "browseros-claw-server-rs" ];
-  cargoTestFlags = [ "-p" "claw-server" ];
+  cargoBuildFlags = [
+    "-p"
+    "claw-server"
+    "--bin"
+    "browseros-claw-server-rs"
+  ];
+  cargoTestFlags = [
+    "-p"
+    "claw-server"
+  ];
 
   # Browser lifecycle and CDP integration require a running patched browser.
   doCheck = false;
