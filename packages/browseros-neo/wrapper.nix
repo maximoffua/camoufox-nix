@@ -8,7 +8,8 @@
 
 # The patched Chromium launches the MCP server itself from its libexec bundle;
 # this wrapper only selects the Nix-built extension (upstream ships it as an
-# unpacked directory too) and keeps the browser self-contained.
+# unpacked directory too). Disable the upstream extension provider: its remote
+# installs outrank command-line extensions and would replace the Nix-built UI.
 stdenv.mkDerivation {
   pname = "browseros-neo";
   version = browser.version or "0.51.1.2";
@@ -24,8 +25,8 @@ stdenv.mkDerivation {
     ln -s "${browser}/share/man" "$out/share/man"
     makeWrapper "${browser}/libexec/browseros-neo/browseros-neo" "$out/bin/browseros-neo" \
       --set-default CHROME_DEVEL_SANDBOX "${browser.sandbox}/bin/__chromium-suid-sandbox" \
-      --append-flags "--load-extension=${extension}/share/browseros-neo/extension" \
-      --append-flags "--disable-extensions-except=${extension}/share/browseros-neo/extension"
+      --append-flags "--disable-browseros-extensions" \
+      --append-flags "--load-extension=${extension}/share/browseros-neo/extension"
     runHook postInstall
   '';
 
