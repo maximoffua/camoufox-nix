@@ -65,7 +65,7 @@ buildPythonApplication rec {
   ]
   ++ lib.optionals (withMcp && mcp != null) [ mcp ];
 
-  pythonImportsCheck = [ "camoufox_mcp" ];
+  pythonImportsCheck = [ "camoufox_mcp" ] ++ lib.optional withMcp "camoufox_mcp.server";
   doCheck = false;
 
   postFixup = ''

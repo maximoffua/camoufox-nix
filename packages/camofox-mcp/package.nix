@@ -11,14 +11,14 @@
 let
   camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-mcp";
-  version = "1.15.0";
+  version = "1.16.0";
 
   srcWithLock = runCommand "${pname}-${version}-src-with-lock" { } ''
     mkdir -p $out
     tar -xzf ${
       fetchurl {
         url = "https://registry.npmjs.org/${pname}/-/${pname}-${version}.tgz";
-        hash = "sha256-FQ7jcpzH6YpIQzgLbOTiztY7rE55SN+H+r2hTD7IbAM=";
+        hash = "sha256-fDSriu1n3cah0NCriDX6T2A533lAOUiWPP0bBNU2CrI=";
       }
     } -C $out --strip-components=1
     cp ${./package-lock.json} $out/package-lock.json
@@ -29,7 +29,7 @@ buildNpmPackage {
 
   src = srcWithLock;
 
-  npmDepsHash = "sha256-iqWNZWvCVD9X8qllDNpsms4e8SsZe4i8Azgb4VP2YiY=";
+  npmDepsHash = "sha256-3iyzC8Zi2GpBdD+PMXDpZWiF3PsLBxBMCcJpzFzNt9Y=";
 
   npmDepsFetcherVersion = 2;
   makeCacheWritable = true;
@@ -43,7 +43,7 @@ buildNpmPackage {
 
     mkdir -p $out/{bin,lib/${pname}}
 
-    npm prune --omit=dev
+    npm prune --omit=dev --ignore-scripts
     ${camoufoxEnv.patchCamoufoxJs "node_modules/camoufox-js"}
 
     cp -r dist node_modules package.json README.md LICENSE $out/lib/${pname}/

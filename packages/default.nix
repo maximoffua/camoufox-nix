@@ -1,4 +1,7 @@
-{ pkgs }:
+{
+  pkgs,
+  browserosChromium ? pkgs.chromium,
+}:
 let
   camoufox = pkgs.callPackage ./camoufox/package.nix { };
 
@@ -37,13 +40,18 @@ let
     inherit camoufox;
   };
 
+  camoufox-mcp-sdk = pkgs.python3Packages.callPackage ./mcp-v1/package.nix { };
   camoufox-reverse-mcp = pkgs.python3Packages.callPackage ./camoufox-reverse-mcp/default.nix {
     inherit camoufox;
+    mcp = camoufox-mcp-sdk;
     pythonCamoufox = python-camoufox;
+    playwright = camoufox-playwright;
   };
 
+  camoufox-playwright = pkgs.python3Packages.callPackage ./python-camoufox/playwright.nix { };
   python-camoufox = pkgs.python3Packages.callPackage ./python-camoufox/default.nix {
     camoufox-browser = camoufox;
+    playwright = camoufox-playwright;
   };
 
   cloverlabs-camoufox = pkgs.python3Packages.callPackage ./cloverlabs-camoufox/default.nix {
@@ -53,6 +61,7 @@ let
   camoufox-browser-cli = pkgs.python3Packages.callPackage ./camoufox-browser-cli/default.nix {
     inherit cloverlabs-camoufox camoufox;
     withMcp = true;
+    mcp = camoufox-mcp-sdk;
   };
 
   camoufox-js = pkgs.callPackage ./camoufox-js/package.nix {
@@ -62,7 +71,7 @@ let
   camoufox-mcp-server = pkgs.writeShellApplication {
     name = "camoufox-mcp-server";
     text = ''
-      printf '%s\n' 'TODO: package whit3rabbit/camoufox-mcp npm graph for camoufox-mcp-server@1.5.0.' >&2
+      printf '%s\n' 'TODO: package whit3rabbit/camoufox-mcp npm graph for camoufox-mcp-server@2.6.0.' >&2
       printf '%s\n' 'Use .#camofox-mcp or .#camoufox-reverse-mcp for a working MCP server.' >&2
       exit 1
     '';
@@ -94,6 +103,7 @@ let
     source = browseros-neo-source;
   };
   browseros-neo-browser = pkgs.callPackage ./browseros-neo/browser.nix {
+    chromium = browserosChromium;
     source = browseros-neo-source;
     server = browseros-neo-server;
     onboarding = browseros-neo-onboarding;
@@ -132,5 +142,5 @@ in
 packages
 // {
   camoufox-bin = pkgs.callPackage ./camoufox-bin { tools = packages; };
-  default = browseros-neo;
+  default = camoufox;
 }

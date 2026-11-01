@@ -1,36 +1,6 @@
---- a/camoufox/__main__.py
-+++ b/camoufox/__main__.py
-@@ -40,6 +40,7 @@
- )
- from .pkgman import (
-     INSTALL_DIR,
-+    env_executable_path,
-     AvailableVersion,
-     CamoufoxFetcher,
-     RepoConfig,
-@@ -253,6 +254,10 @@
-       camoufox fetch                         # install active version
-       camoufox fetch official/135.0-beta.25  # install specific version
-     """
-+    if env_executable_path():
-+        rprint("Camoufox browser managed by Nix wrapper.", fg="yellow")
-+        return
-+
-     # Clean up incompatible old data directory
-     if INSTALL_DIR.exists() and any(INSTALL_DIR.iterdir()) and not COMPAT_FLAG.exists():
-         import shutil
-@@ -1043,7 +1048,7 @@
-     """
-     Print the install directory path
-     """
--    click.echo(INSTALL_DIR)
-+    click.echo(env_executable_path() or INSTALL_DIR)
- 
- 
- if __name__ == "__main__":
---- a/camoufox/pkgman.py
-+++ b/camoufox/pkgman.py
-@@ -116,6 +116,21 @@
+--- a/src/camoufox/pkgman.py
++++ b/src/camoufox/pkgman.py
+@@ -117,6 +117,21 @@
      return profile_dir
  
  
@@ -52,7 +22,7 @@
  def rprint(msg: str, fg: Optional[str] = None, nl: bool = True) -> None:
      """
      Print a styled message
-@@ -769,6 +784,8 @@
+@@ -865,6 +880,8 @@
      """
      Get the full version string of the active install
      """
@@ -61,17 +31,17 @@
      from .multiversion import get_active_path
  
      active = get_active_path()
-@@ -805,6 +822,9 @@
+@@ -898,6 +915,9 @@
      """
      Full path to the active camoufox folder
      """
 +    executable_dir = env_executable_dir()
 +    if executable_dir:
 +        return executable_dir
-     from .multiversion import COMPAT_FLAG, get_active_path
+     from .multiversion import get_active_path, remove_incompatible_data
  
-     # Clean up incompatible old data directory
-@@ -874,6 +894,12 @@
+     remove_incompatible_data()
+@@ -969,6 +989,12 @@
      """
      Get the path to the camoufox executable
      """
@@ -84,22 +54,65 @@
      if browser_path:
          if OS_NAME == 'mac':
              exec_path = os.path.abspath(
---- a/camoufox/utils.py
-+++ b/camoufox/utils.py
-@@ -30,6 +30,7 @@
+--- a/src/camoufox/__main__.py
++++ b/src/camoufox/__main__.py
+@@ -41,6 +41,7 @@
+ )
+ from .browser_pin import BrowserPin, effective_pin, load_pin
  from .pkgman import (
-     INSTALL_DIR,
-     OS_NAME,
 +    env_executable_path,
-     Version,
-     effective_version_min,
-     ensure_browser_profile_dir,
-@@ -726,6 +727,8 @@
+     INSTALL_DIR,
+     AvailableVersion,
+     CamoufoxFetcher,
+@@ -278,6 +279,10 @@
+       camoufox fetch                         # install active version
+       camoufox fetch official/135.0-beta.25  # install specific version
+     """
++    if env_executable_path():
++        rprint("Camoufox browser managed by Nix wrapper.", fg="yellow")
++        return
++
+     remove_incompatible_data()
+     config = load_config()
+     pin = None if version else effective_pin(config)
+@@ -1171,7 +1176,7 @@
+     """
+     Print the install directory path
+     """
+-    click.echo(INSTALL_DIR)
++    click.echo(env_executable_path() or INSTALL_DIR)
+ 
+ 
+ if __name__ == "__main__":
+--- a/src/camoufox/utils.py
++++ b/src/camoufox/utils.py
+@@ -30,6 +30,7 @@
+ import warnings
+ 
+ from .pkgman import (
++    env_executable_path,
+     INSTALL_DIR,
+     LAUNCHER_CONSTANTS,
+     OS_NAME,
+@@ -1128,6 +1129,8 @@
      # mappings supplied by callers. In particular, DISPLAY must not outlive the
      # virtual display that owns it.
      env = dict(environ) if env is None else dict(env)
 +    if executable_path is None:
 +        executable_path = env_executable_path()
-     if isinstance(executable_path, str):
-         # Convert executable path to a Path object
-         executable_path = Path(abspath(executable_path))
+     # CAMOUFOX_EXECUTABLE_PATH points every launch at a specific build without
+     # threading the path through each call site; the CI runners set it for the
+     # browser/tests/playwright/patches guards, which construct AsyncCamoufox directly.
+--- a/src/camoufox/fpgen_model.py
++++ b/src/camoufox/fpgen_model.py
+@@ -156,6 +156,10 @@
+     """Date the files past fpgen's refresh and write the stamp. Files that
+     cannot be re-dated (seeded by another user, or on a read-only filesystem)
+     may be left as they are while fpgen still considers them current."""
++    # Nix manages refreshes; the caller has already verified every model hash.
++    stamp = data_dir / STAMP
++    if stamp.is_file() and stamp.read_text(encoding='utf-8').strip() == PIN['sha256']:
++        return
+     for name in PIN['file_sha256']:
+         path = data_dir / name
+         if int(path.stat().st_mtime) == PINNED_MTIME:

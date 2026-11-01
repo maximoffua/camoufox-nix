@@ -12,7 +12,7 @@
 # installs outrank command-line extensions and would replace the Nix-built UI.
 stdenv.mkDerivation {
   pname = "browseros-neo";
-  version = browser.version or "0.51.1.2";
+  version = "0.52.1";
 
   dontUnpack = true;
   nativeBuildInputs = [ makeWrapper ];
@@ -26,6 +26,7 @@ stdenv.mkDerivation {
     makeWrapper "${browser}/libexec/browseros-neo/browseros-neo" "$out/bin/browseros-neo" \
       --set-default CHROME_DEVEL_SANDBOX "${browser.sandbox}/bin/__chromium-suid-sandbox" \
       --append-flags "--disable-browseros-extensions" \
+      --append-flags "--disable-browseros-server-updater" \
       --append-flags "--load-extension=${extension}/share/browseros-neo/extension"
     runHook postInstall
   '';

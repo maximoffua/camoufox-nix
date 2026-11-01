@@ -6,16 +6,18 @@
   fetchFromGitHub,
   fetchurl,
   runCommand,
+  makeWrapper,
   unstableGitUpdater,
   camoufoxSource ? {
     owner = "daijro";
     repo = "camoufox";
-    rev = "eb5dc3bc5b917d1e6c71d9cacfecdddb55fbfc4a";
-    hash = "sha256-rjUGDd5I1ONw/FYTyXN03CBjhEbTY/T6hE1HZVL7fhc=";
-    version = "152.0.4-beta.31";
-    firefoxVersion = "152.0.4";
-    firefoxHash = "sha256-/YmYIgLNpTU6JzB9hdSJAtRldtRtHJ421VdA5jtSFrs=";
-    displayVersion = "152.0.4-beta.31";
+    rev = "c3ad3bf2c3c6e93225aa6587246c8b70f9314664";
+    hash = "sha256-w5c8KvHSPMCyHG+V9m169Q5RCt/enDsJof+VnXpqmoU=";
+    version = "158.0.1-beta.41";
+    firefoxVersion = "158.0.1";
+    firefoxHash = "sha256-tb7/VfpzoppnSoZ9pZIvXXaZ9R41Hmu+RAX8xLpVqCQ=";
+    displayVersion = "158.0.1-beta.41";
+    sourceSubdir = "browser";
     homepage = "https://github.com/daijro/camoufox";
     sourceName = "daijro/camoufox";
   },
@@ -46,10 +48,17 @@ let
     hash = firefoxHash;
   };
 
-  patchTree = upstreamSrc + "/patches";
-  settingsSource = upstreamSrc + "/settings";
-  additionsSource = upstreamSrc + "/additions";
+  # VulpineOS still uses the older repository-root layout.
+  browserSource =
+    upstreamSrc
+    + (lib.optionalString (camoufoxSource ? sourceSubdir) "/${camoufoxSource.sourceSubdir}");
+  patchTree = browserSource + "/patches";
+  settingsSource = browserSource + "/settings";
+  additionsSource = browserSource + "/additions";
 
+  # mach's rust.configure cannot translate autotools triples
+  # (`x86_64-pc-linux-gnu` -> "Don't know how to translate ... for rustc")
+  # on older source trees (Firefox 146 era); emit Rust triples instead.
   linuxMozTarget =
     camoufoxSource.mozTarget or (
       let
@@ -58,9 +67,9 @@ let
       if cpuName == "aarch64" || cpuName == "arm64" then
         "aarch64-unknown-linux-gnu"
       else if cpuName == "i686" then
-        "i686-pc-linux-gnu"
+        "i686-unknown-linux-gnu"
       else if cpuName == "x86_64" then
-        "x86_64-pc-linux-gnu"
+        "x86_64-unknown-linux-gnu"
       else
         throw "Unsupported Linux moz target CPU: ${toString cpuName}"
     );
@@ -155,14 +164,29 @@ let
         ""
         ""
       ]
-      (builtins.readFile (upstreamSrc + "/assets/base.mozconfig"))
+      (builtins.readFile (browserSource + "/assets/base.mozconfig"))
     + ''
 
       ac_add_options --target=${linuxMozTarget}
     ''
-    + builtins.readFile (upstreamSrc + "/assets/linux.mozconfig");
+    + builtins.readFile (browserSource + "/assets/linux.mozconfig");
 
   generatedMozconfigFile = builtins.toFile "camoufox-linux.mozconfig" generatedMozconfig;
+
+  fontBundleSpec = browserSource + "/scripts/data/font-bundle.json";
+  bundledFonts =
+    let
+      spec = builtins.fromJSON (builtins.readFile fontBundleSpec);
+      archive = fetchurl {
+        inherit (spec) url;
+        sha256 = spec.sha256;
+      };
+    in
+    runCommand "camoufox-fonts" { } ''
+      mkdir -p "$out"
+      tar -xJf ${archive} -C "$out"
+      test -s "$out/fonts/groups.json"
+    '';
 
   camoufox-unwrapped =
     (
@@ -236,15 +260,19 @@ let
             "$sourceRoot/build/vs" \
             "$sourceRoot/lw"
 
-          cp -f "${upstreamSrc}/assets/search-config.json" "$sourceRoot/services/settings/dumps/main/search-config.json"
-          cp -f "${upstreamSrc}/patches/librewolf/pack_vs.py" "$sourceRoot/build/vs/pack_vs.py"
+          ${lib.optionalString (lib.versionOlder firefoxVersion "158") ''
+            cp -f "${browserSource}/assets/search-config.json" "$sourceRoot/services/settings/dumps/main/search-config.json"
+            cp -f "${browserSource}/patches/librewolf/pack_vs.py" "$sourceRoot/build/vs/pack_vs.py"
+          ''}
 
           cp -f "${settingsSource}/${settingsConfig}" "$sourceRoot/lw/${settingsConfig}"
           cp -f "${settingsSource}/distribution/policies.json" "$sourceRoot/lw/policies.json"
           cp -f "${settingsSource}/defaults/pref/local-settings.js" "$sourceRoot/lw/local-settings.js"
-          cp -f "${settingsSource}/chrome.css" "$sourceRoot/lw/chrome.css"
+          ${lib.optionalString (lib.versionOlder firefoxVersion "158") ''
+            cp -f "${settingsSource}/chrome.css" "$sourceRoot/lw/chrome.css"
+            cp -f "${browserSource}/scripts/mozfetch.sh" "$sourceRoot/lw/mozfetch.sh"
+          ''}
           cp -f "${settingsSource}/properties.json" "$sourceRoot/lw/properties.json"
-          cp -f "${upstreamSrc}/scripts/mozfetch.sh" "$sourceRoot/lw/mozfetch.sh"
           : > "$sourceRoot/lw/moz.build"
 
           cp -R "${additionsSource}/." "$sourceRoot/"
@@ -329,6 +357,7 @@ runCommand "camoufox-${version}"
   {
     pname = "camoufox";
     inherit version;
+    nativeBuildInputs = [ makeWrapper ];
     passthru = camoufox-unwrapped.passthru // {
       unwrapped = camoufox-unwrapped;
       updateScript = unstableGitUpdater {
@@ -354,6 +383,21 @@ runCommand "camoufox-${version}"
       fi
     done
 
+    # Keep executable and metadata together even after Python resolves symlinks.
+    rm "$out/bin/camoufox"
+    makeWrapper ${camoufox-unwrapped}/bin/camoufox "$out/bin/camoufox" \
+      ${lib.optionalString (builtins.pathExists fontBundleSpec) ''
+        --set-default FONTCONFIG_FILE "$out/bin/fonts.conf"
+      ''}
+    ln -s ${camoufox-unwrapped}/lib/camoufox/application.ini "$out/bin/application.ini"
+    test -s "$out/bin/application.ini"
+    ${lib.optionalString (builtins.pathExists fontBundleSpec) ''
+      ln -s ${bundledFonts}/fonts "$out/bin/fonts"
+      cp -R ${browserSource}/bundle/fontconfig "$out/bin/fontconfig"
+      cp "$out/bin/fontconfig/linux/fonts.conf" "$out/bin/fonts.conf"
+      substituteInPlace "$out/bin/fonts.conf" \
+        --replace-fail '<dir prefix="cwd">fonts</dir>' '<dir>${bundledFonts}/fonts</dir>'
+    ''}
     cp -f "${settingsSource}/properties.json" "$out/bin/properties.json"
     printf '{"version":"%s","release":"%s"}\n' '${firefoxVersion}' '${camoufoxRelease}' > "$out/bin/version.json"
   ''

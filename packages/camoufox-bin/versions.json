@@ -1,13 +1,13 @@
 {
-  "release": "v152.0.4-beta.30",
+  "release": "v158.0.1-beta.41",
   "sources": {
     "x86_64-linux": {
-      "version": "152.0.4-beta.30",
-      "hash": "sha256-kVEMDYEPN4PIxgcjJehrdfjkrMLORhTWUYvfxFDCGZ4="
+      "version": "158.0.1-beta.41",
+      "hash": "sha256-XHaT5f/dTu2oEyebiPSaxzeRGt//WFKvs64+KdeoqsM="
     },
     "aarch64-linux": {
-      "version": "152.0.4-beta.30",
-      "hash": "sha256-Gc/sa6PeDGfZQaC1qwrdZZmegVfQoa4cAIW/BGPwyIg="
+      "version": "158.0.1-beta.41",
+      "hash": "sha256-RvujGuE2ua1txAA9tYmbmwqRTr0mtmgF9aeHNQUWU6g="
     }
   }
 }

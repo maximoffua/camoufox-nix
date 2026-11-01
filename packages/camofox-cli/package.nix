@@ -13,16 +13,18 @@ let
   camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-cli";
   npmName = "camoufox-cli";
-  version = "0.7.3";
+  version = "0.7.6";
 
   srcWithLock = runCommand "${pname}-${version}-src-with-lock" { } ''
     mkdir -p $out
     tar -xzf ${
       fetchurl {
         url = "https://registry.npmjs.org/${npmName}/-/${npmName}-${version}.tgz";
-        hash = "sha256-CkaXGo2ajrgBzhQrZqgp85szxmcS9hOLSvJFK/wjJCI=";
+        hash = "sha256-Gx0B95gF0Kv+eKkmOOLaYKZ98oAC2EnuAgQxvEoYCAw=";
       }
     } -C $out --strip-components=1
+    substituteInPlace $out/package.json \
+      --replace-fail '"camoufox-js": "0.11.2"' '"camoufox-js": "0.13.0"'
     cp ${./package-lock.json} $out/package-lock.json
   '';
 in
@@ -31,11 +33,12 @@ buildNpmPackage {
 
   src = srcWithLock;
 
-  npmDepsHash = "sha256-50PzFnhW8/y7qE1V91SHh3DG/G5pea46TRlz/r86gSA=";
+  npmDepsHash = "sha256-yso9mh1WNaeaccsbLkaEg02DrenBZzpABoWxP2TtuQc=";
 
   makeCacheWritable = true;
   npm_config_build_from_source = "true";
   dontNpmBuild = true;
+  npmFlags = [ "--ignore-scripts" ];
 
   nativeBuildInputs = [
     makeWrapper
@@ -44,7 +47,6 @@ buildNpmPackage {
 
   postPatch = ''
     substituteInPlace dist/cli.js \
-      --replace-fail 'spawn("node", [daemonPath, ...args], {' 'spawn(process.execPath, [daemonPath, ...args], {' \
       --replace-fail '    if (action === "install") {' '    // Client-side browser management is handled by the Nix package.
     if (action === "install" && (process.env.CAMOUFOX_EXECUTABLE || process.env.CAMOUFOX_EXECUTABLE_PATH || process.env.CAMOFOX_EXECUTABLE || process.env.CAMOFOX_EXECUTABLE_PATH)) {
         process.stderr.write("[camoufox-cli] Browser is managed by Nix; skipping browser download.\n");
@@ -58,7 +60,7 @@ buildNpmPackage {
 
     mkdir -p $out/{bin,lib/${pname}}
 
-    npm prune --omit=dev
+    npm prune --omit=dev --ignore-scripts
     ${camoufoxEnv.patchCamoufoxJs "node_modules/camoufox-js"}
 
     cp -r dist node_modules package.json LICENSE $out/lib/${pname}/

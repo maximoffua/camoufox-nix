@@ -7,7 +7,6 @@
   gh,
   jq,
   nix,
-  unzip,
   coreutils,
   autoPatchelfHook,
   patchelfUnstable, # required for --no-clobber-old-sections (Firefox relrhack)
@@ -105,7 +104,7 @@ stdenv.mkDerivation {
   # it with their own runtime-generated config.
   preFixup = ''
     gappsWrapperArgs+=(
-      --set-default FONTCONFIG_FILE "$out/${libDir}/fontconfig/linux/fonts.conf"
+      --set-default FONTCONFIG_FILE "$out/${libDir}/fonts.conf"
     )
   '';
 
@@ -119,7 +118,8 @@ stdenv.mkDerivation {
     # process CWD (`<dir prefix="cwd">fonts</dir>`). Bake an absolute path so a
     # standalone launch uses Camoufox's bundled fonts (matching the fingerprint
     # the python/JS launchers produce, which rewrite this file the same way).
-    substituteInPlace "$out/${libDir}/fontconfig/linux/fonts.conf" \
+    cp "$out/${libDir}/fontconfig/linux/fonts.conf" "$out/${libDir}/fonts.conf"
+    substituteInPlace "$out/${libDir}/fonts.conf" \
       --replace-fail '<dir prefix="cwd">fonts</dir>' \
         "<dir>$out/${libDir}/fonts</dir>"
 
@@ -129,6 +129,9 @@ stdenv.mkDerivation {
     # Consumers (python-camoufox, camoufox-js, the MCP servers) locate the
     # release metadata next to the executable they are pointed at via
     # CAMOUFOX_EXECUTABLE. Mirror the layout the from-source package produces.
+    for asset in application.ini addons fontconfig fonts; do
+      ln -s "$out/${libDir}/$asset" "$out/bin/$asset"
+    done
     cp -f "$out/${libDir}/properties.json" "$out/bin/properties.json"
     printf '{"version":"%s","release":"%s"}\n' \
       '${firefoxVersion}' '${camoufoxRelease}' > "$out/bin/version.json"
@@ -147,10 +150,8 @@ stdenv.mkDerivation {
       name = "camoufox-bin-update";
       runtimeInputs = [
         gh
-        curl
         jq
         nix
-        unzip
         coreutils
       ];
       text = builtins.readFile ./update.sh;

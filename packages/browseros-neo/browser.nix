@@ -73,12 +73,9 @@ chromium.mkDerivation (base: rec {
       echo '{}' > "$beDir/bundled_extensions.json"
       perl -pi -e 's/"[a-p]{32}\.crx",? ?//g' "$beDir/BUILD.gn"
 
-      # Nix store is immutable: server-side OTA would only fail.
-      substituteInPlace chrome/browser/browseros/server/browseros_server_config.h \
-        --replace-fail "bool enable_updater = true;" "bool enable_updater = false;"
-
       echo "browseros-neo: copying browserclaw resources into the tree" >&2
-      cp ${source}/packages/browseros/resources/BROWSEROS_VERSION chrome/BROWSEROS_VERSION
+      # Public source retains stale version metadata; stamp its associated release.
+      printf 'BROWSEROS_MAJOR=0\nBROWSEROS_MINOR=52\nBROWSEROS_BUILD=1\nBROWSEROS_PATCH=0\n' > chrome/BROWSEROS_VERSION
       resDir="${source}/packages/browseros/resources/browserclaw/icons"
       cp "$resDir"/*.png "$resDir"/*.svg "$resDir"/*.ai chrome/app/theme/chromium/ 2>/dev/null || true
       cp -R "$resDir"/chromeos chrome/app/theme/chromium/chromeos

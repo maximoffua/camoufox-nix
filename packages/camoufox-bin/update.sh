@@ -1,3 +1,5 @@
+set -euo pipefail
+
 repo="daijro/camoufox"
 
 # Path relative to the repo root; run this from there.
@@ -31,21 +33,12 @@ x86_version="${x86_version%-lin.x86_64.zip}"
 arm_version="${arm_asset#camoufox-}"
 arm_version="${arm_version%-lin.arm64.zip}"
 
-# One temp dir for the whole run, cleaned up on any exit.
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
-
-# Hash an asset without importing it into the store: download to the temp dir,
-# unpack, and take the NAR hash fetchzip expects.
+# Prefetch and hash unpacked assets exactly as fetchzip expects. Cache results
+# in the store, and fail before touching the pin if either fetch fails.
 sri() {
-  local dir hash
-  dir="$tmpdir/$1"
-  mkdir -p "$dir"
   echo "camoufox-bin-update: downloading $1" >&2
-  curl -fL --progress-bar -o "$dir/$1" "https://github.com/$repo/releases/download/$tag/$1"
-  unzip -q "$dir/$1" -d "$dir/unpacked"
-  hash="$(nix hash path --type sha256 --sri "$dir/unpacked")"
-  printf '%s\n' "$hash"
+  nix store prefetch-file --json --name source --unpack \
+    "https://github.com/$repo/releases/download/$tag/$1" | jq -er '.hash | select(startswith("sha256-"))'
 }
 
 echo "camoufox-bin-update: $tag (firefox $firefox)" >&2
@@ -61,6 +54,9 @@ updated="$(jq \
    | .sources."x86_64-linux" = { version: $x86Version, hash: $x86Hash }
    | .sources."aarch64-linux" = { version: $armVersion, hash: $armHash }' \
   "$target")"
-printf '%s\n' "$updated" > "$target"
+tmp_target="$(mktemp "${target}.XXXXXX")"
+trap 'rm -f "$tmp_target"' EXIT
+printf '%s\n' "$updated" > "$tmp_target"
+mv -f "$tmp_target" "$target"
 
 echo "camoufox-bin-update: wrote $target" >&2

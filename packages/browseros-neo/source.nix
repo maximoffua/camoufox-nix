@@ -4,6 +4,8 @@
 fetchFromGitHub {
   owner = "browseros-ai";
   repo = "BrowserOS";
-  rev = "db227de2a98c65b1abc7b3be773c5ac16578a8bf"; # browserclaw/v0.51.1.2
-  hash = "sha256-jnW4NrbsaZ1digRhLQ2ySEgGZvOrIt+U7TgcfoY1hHk=";
+  # Public source identified by build-provenance-0.52.1.json in browserclaw/v0.52.0.
+  # Official binaries include newer private component revisions; we build public source.
+  rev = "22a331a2b846df9cc233e9614ab0ae4696e79947";
+  hash = "sha256-qedQJAyYXojzfU9vB4KzrpwDu40Z9gkjUs4GgEA5J58=";
 }

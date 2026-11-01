@@ -10,7 +10,7 @@
 
 stdenvNoCC.mkDerivation {
   pname = "browseros-neo-extension";
-  version = "0.2.36"; # claw-app version at pinned browserclaw/v0.51.1.2 revision
+  version = "0.2.54"; # claw-app version in the public 0.52.1 source
   src = "${source}/packages/browseros-agent";
 
   nativeBuildInputs = [

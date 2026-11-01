@@ -10,7 +10,7 @@
 
 stdenvNoCC.mkDerivation {
   pname = "browseros-neo-onboarding";
-  version = "0.0.16"; # claw-onboard version at pinned browserclaw/v0.51.1.2 revision
+  version = "0.0.19"; # claw-onboard version in the public 0.52.1 source
   src = "${source}/packages/browseros-agent";
 
   nativeBuildInputs = [

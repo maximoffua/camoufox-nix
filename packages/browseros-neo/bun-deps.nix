@@ -10,7 +10,7 @@
 # whole workspace tree must be captured, not just the root node_modules.
 stdenvNoCC.mkDerivation {
   pname = "browseros-neo-bun-deps";
-  version = "0.51.1.2";
+  version = "0.52.1";
   src = "${source}/packages/browseros-agent";
 
   nativeBuildInputs = [
@@ -36,5 +36,5 @@ stdenvNoCC.mkDerivation {
 
   outputHashAlgo = "sha256";
   outputHashMode = "recursive";
-  outputHash = "sha256-gXZjseQPOZmaIr7H+6wsNJEEeNnCcqQUIKuYfOJHtkI=";
+  outputHash = "sha256-5OiQxWtrHinUrWopRtObnNempUdGpPd6hZK1do/wam0=";
 }

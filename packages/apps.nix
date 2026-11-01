@@ -22,5 +22,5 @@ in
   foxbridge = app packages.foxbridge;
   vulpineos = app packages.vulpineos;
   browseros-neo = app packages.browseros-neo;
-  default = app packages.browseros-neo;
+  default = app packages.camoufox;
 }

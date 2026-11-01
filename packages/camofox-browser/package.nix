@@ -11,14 +11,14 @@
 let
   camoufoxEnv = import ../camoufox-env.nix { inherit lib; };
   pname = "camofox-browser";
-  version = "2.4.7";
+  version = "2.4.9";
 
   srcWithLock = runCommand "${pname}-${version}-src-with-lock" { } ''
     mkdir -p $out
     tar -xzf ${
       fetchurl {
         url = "https://registry.npmjs.org/${pname}/-/${pname}-${version}.tgz";
-        hash = "sha256-/oUF7E8JHOrsPkQGvp0RBJcL2ur9g4ddQRSg8atwuXA=";
+        hash = "sha256-DCfZGZk37rnGxllk+5ac2YFg1itR+wpScRUGehtqujE=";
       }
     } -C $out --strip-components=1
     cp ${./package-lock.json} $out/package-lock.json
@@ -29,18 +29,18 @@ buildNpmPackage {
 
   src = srcWithLock;
 
-  npmDepsHash = "sha256-ceokUMxm6y2svg5s0V77fod4hEc9JZrJUFvFB6jgeLo=";
+  npmDepsHash = "sha256-zn2voUcnWLtdxQQO88s8NhQl2AZY0+sNn5QoVF/IzEE=";
 
   npmDepsFetcherVersion = 2;
   makeCacheWritable = true;
-  npmFlags = [ ];
+  npmFlags = [ "--ignore-scripts" ];
   dontNpmBuild = true;
 
   nativeBuildInputs = [ makeWrapper ];
 
   postPatch = ''
     substituteInPlace package.json \
-      --replace-fail '"camoufox-js": "^0.8.5"' '"camoufox-js": "0.12.0"'
+      --replace-fail '"camoufox-js": "^0.11.4"' '"camoufox-js": "0.13.0"'
     substituteInPlace dist/src/services/context-pool.js \
       --replace-fail 'const opts = await (0, camoufox_js_1.launchOptions)({' 'const opts = await (0, camoufox_js_1.launchOptions)({ ...(${camoufoxEnv.executableEnvJs} ? { executable_path: ${camoufoxEnv.executableEnvJs} } : {}),'
   '';
@@ -50,7 +50,7 @@ buildNpmPackage {
 
     mkdir -p $out/{bin,lib/${pname}}
 
-    npm prune --omit=dev
+    npm prune --omit=dev --ignore-scripts
     ${camoufoxEnv.patchCamoufoxJs "node_modules/camoufox-js"}
 
     cp -r dist bin node_modules package.json README.md CHANGELOG.md LICENSE $out/lib/${pname}/

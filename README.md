@@ -17,8 +17,9 @@ $ nix build github:maximoffua/camoufox-nix#camoufox
 $ nix shell github:maximoffua/camoufox-nix#python-camoufox
 ```
 
-`nix run` and `nix build` without an attribute select `python-camoufox`. Use
-`.` from a checkout.
+`nix run` and `nix build` without an attribute select the source-built `camoufox`
+browser. Use `nix run .` from a checkout. BrowserOS neo remains available with
+`nix run .#browseros-neo`.
 
 ## Packages
 
@@ -27,24 +28,45 @@ versions identify source snapshots, not upstream releases.
 
 | Flake package | Version | Description | Declared platforms |
 | --- | --- | --- | --- |
-| `camoufox` | `152.0.4-beta.31` | Patched Camoufox/Firefox browser source build | Linux |
-| `camoufox-bin` | `152.0.4-beta.30` | Prebuilt Camoufox release patched for NixOS; no Firefox compile | Linux `x86_64`, `aarch64` |
+| `camoufox` | `158.0.1-beta.41` | Patched Camoufox/Firefox browser source build | Linux |
+| `camoufox-bin` | `158.0.1-beta.41` | Prebuilt Camoufox release patched for NixOS; no Firefox compile | Linux `x86_64`, `aarch64` |
+| `browseros-neo` | `0.52.1` public source | Neo agent browser, bundled MCP server and dashboard | Linux |
 | `camoufox-vulpineos` | `0-unstable-2026-06-29` | VulpineOS Camoufox fork; browser display version `146.0.1-beta.25` | Linux |
-| `python-camoufox` | `0.5.6` | Python interface for launching Camoufox with Playwright | Unix |
+| `python-camoufox` | `0.5.9` | Python interface for launching Camoufox with Playwright | Unix |
 | `cloverlabs-camoufox` | `0.6.0` | CloverLabs Python interface; GeoIP enabled by default | Unix |
 | `camoufox-browser-cli` | `0.1.1` | Python CLI with optional MCP support; built here with MCP enabled | Unix |
-| `camofox-cli` | `0.7.3` | Node automation CLI | Linux |
-| `camofox-browser` | `2.4.7` | Node anti-detection browser server | Linux |
+| `camofox-cli` | `0.7.6` | Node automation CLI | Linux |
+| `camofox-browser` | `2.4.9` | Node anti-detection browser server | Linux |
 | `jo-camofox-browser` | `1.9.1` | Node browser server from `maximoffua/camofox-browser` | Linux |
-| `camofox-mcp` | `1.15.0` | Node MCP server; also provides `camofox-mcp-http` | Linux |
+| `camofox-mcp` | `1.16.0` | Node MCP server; also provides `camofox-mcp-http` | Linux |
 | `camoufox-reverse-mcp` | `1.8.0` | Python MCP server for JavaScript reverse engineering | Unix |
-| `camoufox-js` | `0.12.0` | JavaScript interface and CLI for Playwright | Linux |
-| `camoufox-mcp-server` | `1.5.0` target | Placeholder for `whit3rabbit/camoufox-mcp`; exits non-zero | Unix |
+| `camoufox-js` | `0.13.0` | JavaScript interface and CLI for Playwright | Linux |
+| `camoufox-mcp-server` | `2.6.0` target | Placeholder for `whit3rabbit/camoufox-mcp`; exits non-zero | Unix |
 | `foxbridge` | `0.1.1` | CDP-to-Firefox protocol proxy | Unix |
 | `vulpineos` | `0.1.8-dev.7` | VulpineOS browser-agent runtime | Linux |
 | `vulpineos-camoufox-notes` | `0.1.0` | Reference documentation derivation; no binary | All |
 | `docker-camoufox-camofox-mcp` | `latest` | OCI image containing `camoufox` and `camofox-mcp` | OCI tarball |
 | `docker-vulpineos-foxbridge` | `latest` | OCI image containing VulpineOS, foxbridge, and VulpineOS Camoufox | OCI tarball |
+
+## BrowserOS neo
+
+```console
+$ nix run .#browseros-neo
+```
+
+Neo is the upstream `browserclaw` product, not BrowserOS. This package builds
+public source associated with the 0.52.1 maintenance release: server 0.0.90,
+extension 0.2.54, onboarding 0.0.19. Official binaries use newer private
+component revisions, so this is not a byte-for-byte reproduction.
+
+Neo patches still target Chromium 155. The separate `nixpkgs-browseros` input
+keeps compatible Chromium 155.0.8059.79 while other packages use current nixpkgs.
+This does not track current Chromium security releases; keep agent profiles
+isolated from sensitive everyday browsing. Server and dashboard OTA are disabled:
+update through Nix instead. Normal user extension installation remains enabled.
+
+Python Camoufox uses the pinned offline fpgen model and compatible Playwright
+1.62.0 API/driver pair; it does not download browser or fingerprint data at launch.
 
 ## Prebuilt browser
 
@@ -68,7 +90,7 @@ $ nix run .#camoufox-bin -- --headless --screenshot "$PWD/camoufox-bin.png" http
 ```
 
 `camoufox-bin` declares Linux `x86_64` and `aarch64` only. It skips the Firefox
-compile but fetches a release archive of roughly 660 MB on the first build. Its
+compile but fetches a large release archive on the first build. Its
 bundled fonts are wired through `FONTCONFIG_FILE`, so a bare launch fingerprints
 the same as the Python and JavaScript launchers.
 
@@ -107,10 +129,10 @@ and Firefox version are derived:
 ```nix
 camoufox-bin-next = camoufox-bin.override {
   camoufoxBinSource = {
-    release = "v152.0.4-beta.30";
+    release = "v158.0.1-beta.41";
     sources = {
-      x86_64-linux = { version = "152.0.4-beta.30"; hash = "sha256-..."; };
-      aarch64-linux = { version = "152.0.4-beta.30"; hash = "sha256-..."; };
+      x86_64-linux = { version = "158.0.1-beta.41"; hash = "sha256-..."; };
+      aarch64-linux = { version = "158.0.1-beta.41"; hash = "sha256-..."; };
     };
   };
 };
@@ -121,7 +143,7 @@ camoufox-bin-next = camoufox-bin.override {
 ### Run, shell, and build
 
 ```console
-# Python CLI (default app)
+# Python CLI
 $ nix run github:maximoffua/camoufox-nix#camoufox-python -- --help
 
 # Browser
@@ -137,7 +159,9 @@ $ nix build github:maximoffua/camoufox-nix#camoufox
 $ nix build .#foxbridge .#vulpineos
 ```
 
-The full browser build compiles Firefox and is Linux-only. Reuse its path with
+The full browser build compiles Firefox and is Linux-only. Its fingerprint fonts
+come from the hash-pinned upstream font bundle, fetched separately from browser
+source. Reuse its path with
 browser tools:
 
 ```console

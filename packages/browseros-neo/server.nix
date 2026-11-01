@@ -6,7 +6,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "browseros-neo-server";
-  version = "0.0.71"; # claw-server crate version at pinned browserclaw/v0.51.1.2 revision
+  version = "0.0.90"; # claw-server version in the public 0.52.1 source
   src = "${source}/packages/browseros-agent";
 
   cargoLock.lockFile = "${source}/packages/browseros-agent/Cargo.lock";

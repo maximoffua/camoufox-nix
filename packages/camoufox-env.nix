@@ -60,14 +60,25 @@ rec {
     }'
       fi
 
-      substituteInPlace ${packageDir}/dist/pkgman.js \
+      if grep -q 'export async function ensureCamoufoxInstalled()' ${packageDir}/dist/pkgman.js; then
+        substituteInPlace ${packageDir}/dist/pkgman.js \
+          --replace-fail 'return getActivePath() ?? INSTALL_DIR.toString();' 'return envExecutableDir() ?? getActivePath() ?? INSTALL_DIR.toString();' \
+          --replace-fail 'export async function ensureCamoufoxInstalled() {' 'export async function ensureCamoufoxInstalled() {
+        if (envExecutablePath()) return;' \
+          --replace-fail 'export function camoufoxPath(_downloadIfMissing = true) {' 'export function camoufoxPath(_downloadIfMissing = true) {
+        if (envExecutableDir()) return envExecutableDir();'
+      else
+        substituteInPlace ${packageDir}/dist/pkgman.js \
         --replace-fail 'export function camoufoxPath(downloadIfMissing = true) {
         // Ensure the directory exists and is not empty' 'export function camoufoxPath(downloadIfMissing = true) {
         const executableDir = envExecutableDir();
         if (executableDir) {
             return executableDir;
         }
-        // Ensure the directory exists and is not empty' \
+        // Ensure the directory exists and is not empty'
+      fi
+
+      substituteInPlace ${packageDir}/dist/pkgman.js \
         --replace-fail 'export function launchPath() {
         const launchPath = getPath(LAUNCH_FILE[OS_NAME]);' 'export function launchPath() {
         const executable = envExecutablePath();
@@ -80,7 +91,7 @@ rec {
         const launchPath = getPath(LAUNCH_FILE[OS_NAME]);'
 
       substituteInPlace ${packageDir}/dist/utils.js \
-        --replace-fail 'import { getPath, installedVerStr, launchPath, OS_NAME } from "./pkgman.js";' 'import { envExecutablePath, getPath, installedVerStr, launchPath, OS_NAME } from "./pkgman.js";' \
+        --replace-fail 'getPath, installedVerStr, launchPath, OS_NAME' 'envExecutablePath, getPath, installedVerStr, launchPath, OS_NAME' \
         --replace-fail 'if (typeof executable_path === "string") {' 'if (!executable_path) {
             executable_path = envExecutablePath();
         }

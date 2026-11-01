@@ -1,6 +1,14 @@
-{ ... }:
+{ inputs, ... }:
 let
-  mkPackages = import ./default.nix;
+  mkPackages =
+    { pkgs }:
+    import ./default.nix {
+      inherit pkgs;
+      browserosChromium =
+        (import inputs.nixpkgs-browseros {
+          system = pkgs.stdenv.hostPlatform.system;
+        }).chromium;
+    };
   mkApps = import ./apps.nix;
 in
 {
@@ -15,6 +23,7 @@ in
         (python-final: _python-prev: {
           camoufox = python-final.callPackage ./python-camoufox/default.nix {
             camoufox-browser = final.camoufox;
+            playwright = python-final.callPackage ./python-camoufox/playwright.nix { };
           };
         })
       ];
